@@ -1,0 +1,9 @@
+version: 0 
+snippet:
+  - name: example
+    content: curl -v "http://127.0.0.1"
+    comment: curl
+
+  - name: example2
+    content: echo "good"
+    comment: echo

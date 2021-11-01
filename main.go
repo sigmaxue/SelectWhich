@@ -5,7 +5,6 @@ import (
 	"io"
 	"fmt"
 	"log"
-	"bufio"
 	"regexp"
 	"strings"
 
@@ -14,6 +13,8 @@ import (
 
 type pepper struct {
 	Name     string
+	Content  string
+	Comment  string
 	HeatUnit int
 	Peppers  int
 	CmdType  int
@@ -26,7 +27,7 @@ var (
 )
 
 func init(){
-	errFile,err:=os.OpenFile("~/errors.log",os.O_CREATE|os.O_WRONLY|os.O_APPEND,0666)
+	errFile,err:=os.OpenFile("errors.log",os.O_CREATE|os.O_WRONLY|os.O_APPEND,0666)
 	if err!=nil{
 		log.Fatalln("打开日志文件失败：",err)
 	}
@@ -39,34 +40,29 @@ func init(){
 
 func main() {
 	peppers := []pepper{
-		{Name: "Bell Pepper", HeatUnit: 0, Peppers: 0},
-		{Name: "Banana Pepper", HeatUnit: 100, Peppers: 1},
+		{Name: "Example", Content: "blank", Comment: ""},
 	}
 
-	fp,err := os.Open("~/shell.txt")
-	if err!=nil{
-		fmt.Println(err) //打开文件错误
-		return 
+	info := BaseInfo{};
+	snippets, err := info.GetConf("snippets.yml");
+	if err != nil {
+		Warning.Println(err.Error())
 	}
-	buf := bufio.NewScanner(fp)
-	for {
-		if !buf.Scan() {
-			break //文件读完了,退出for
-		}
-		line := buf.Text() //获取每一行
-		peppers = append(peppers, pepper{Name: line, HeatUnit: 0, Peppers: 0, CmdType: 1})
+
+	for _, v := range snippets.Snippet {
+		peppers = append(peppers, pepper{Name: v.Name, Content: v.Content, Comment: v.Comment })
 	}
 
 	templates := &promptui.SelectTemplates{
 		Label:    "{{ . }}?",
-		Active:   "\U0001F336 {{ .Name | cyan }} ({{ .HeatUnit | red }})",
-		Inactive: "  {{ .Name | blue }} ({{ .HeatUnit | blue }})",
-		Selected: " {{ .Name | red | cyan }}",
+		Active:   "\U0001F336 {{ .Content | cyan }} ({{ .Name | red }})",
+		Inactive: "  {{ .Content | blue }} ({{ .Name | blue }})",
+		Selected: " {{ .Content | red | cyan }}",
 		Details: `
 --------- Pepper ----------
 {{ "Name:" | faint }}	{{ .Name }}
-{{ "Heat Unit:" | faint }}	{{ .HeatUnit }}
-{{ "Peppers:" | faint }}	{{ .Peppers }}`,
+{{ "Content:" | faint }}	{{ .Content }}
+{{ "Comment:" | faint }}	{{ .Comment }}`,
 	}
 
 	searcher := func(input string, index int) bool {
@@ -96,5 +92,5 @@ func main() {
 
 	// Warning.Printf("You choose number %d: %v\n", i+1, peppers[i])
 
-	fmt.Println(peppers[i].Name)
+	fmt.Println(peppers[i].Content)
 }
