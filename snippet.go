@@ -6,15 +6,16 @@ import (
 )
 
 //解析yml文件
-type Item struct {
+type Snippet struct {
 	Name     string `yaml:"name"`
 	Content  string `yaml:"content"`
 	Comment  string `yaml:"comment"`
+	CmdType  string `yaml:"cmdtype"`
 }
 
 type BaseInfo struct {
 	Version     string `yaml:"version"`
-	Snippet	    []Item `yaml:"snippet"`
+	Snippets    []Snippet `yaml:"snippet"`
 }
 
 func (c *BaseInfo) GetConf(filename string) (*BaseInfo,  error) {

@@ -12,13 +12,6 @@ import (
 	"github.com/manifoldco/promptui"
 )
 
-type pepper struct {
-	Name     string
-	Content  string
-	Comment  string
-	CmdType  string
-}
-
 var (
 	Info *log.Logger
 	Warning *log.Logger
@@ -38,8 +31,8 @@ func init(){
 }
 
 func main() {
-	peppers := []pepper{
-		{Name: "Help", Content: "Help", Comment: "add custom cmdline to snippets.yaml"},
+	items := []Snippet{
+		{Name: "Help", Content: "ls", Comment: "add custom cmdline to snippets.yaml", CmdType: "shell"},
 	}
 
 	info := BaseInfo{};
@@ -47,8 +40,8 @@ func main() {
 	if err != nil {
 		Warning.Println(err.Error())
 	} else {
-		for _, v := range snippets.Snippet {
-			peppers = append(peppers, pepper{Name: v.Name, Content: v.Content, Comment: v.Comment })
+		for _, v := range snippets.Snippets {
+			items = append(items, Snippet{Name: v.Name, Content: v.Content, Comment: v.Comment, CmdType: v.CmdType })
 		}
 	}
 
@@ -61,12 +54,13 @@ func main() {
 --------- Detail ----------
 {{ "Name:" | faint }}	{{ .Name }}
 {{ "Content:" | faint }}	{{ .Content }}
+{{ "CmdType:" | faint }}	{{ .CmdType }}
 {{ "Comment:" | faint }}	{{ .Comment }}`,
 	}
 
 	searcher := func(input string, index int) bool {
-		pepper := peppers[index]
-		ctx := strings.ToLower(pepper.Content)
+		item := items[index]
+		ctx := strings.ToLower(item.Content)
 		input = strings.Replace(strings.ToLower(input), " ", ".*", -1)
 
 		match, _ := regexp.MatchString(input, ctx)  
@@ -75,7 +69,7 @@ func main() {
 
 	prompt := promptui.Select{
 		Label:     "Select Which",
-		Items:     peppers,
+		Items:     items,
 		Templates: templates,
 		Size:      4,
 		Searcher:  searcher,
@@ -88,12 +82,26 @@ func main() {
 		return
 	}
 
-	command := fmt.Sprintf("echo '%s' | vipe ", peppers[i].Content)
-	cmd := exec.Command("/bin/bash", "-c", command)
-	output, err := cmd.Output()
-	if err != nil {
-		Warning.Printf("Cmd error choose number %d: %v\n", i+1, peppers[i])
-		return
+	command := items[i].Content
+	if strings.Contains(items[i].CmdType, "snippet") {
+		command = fmt.Sprintf("echo '%s' | vipe ", items[i].Content)
+		cmd := exec.Command("/bin/bash", "-c", command)
+		output, err := cmd.Output()
+		if err != nil {
+			Warning.Printf("Cmd error choose number %d: %v\n", i+1, items[i])
+			return
+		}
+		command = string(output)
 	}
-	fmt.Printf("%s", output)
+	if strings.Contains(items[i].CmdType, "shell") {
+		cmd := exec.Command("/bin/bash", "-c", command)
+		output, err := cmd.Output()
+		if err != nil {
+			Warning.Printf("Cmd run error: %v\n", command)
+			return
+		}
+		command = string(output)
+	}
+
+	fmt.Printf("%s", command)
 }

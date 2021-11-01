@@ -1,9 +1,16 @@
 version: 0 
 snippet:
   - name: example
-    content: curl -v "http://127.0.0.1"
-    comment: curl
+    content: mycurl
+    cmdtype: snippet-shell
+    comment: curl -v "http://${1}"
 
   - name: example2
+    content: datetime
+    cmdtype: snippet
+    comment: strftime("%Y-%m-%d %H:%M")
+
+  - name: example3
     content: echo "good"
+    cmdtype: shell
     comment: echo
