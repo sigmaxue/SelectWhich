@@ -40,17 +40,17 @@ func init(){
 
 func main() {
 	peppers := []pepper{
-		{Name: "Example", Content: "blank", Comment: ""},
+		{Name: "Help", Content: "Help", Comment: "add custom cmdline to snippets.yaml"},
 	}
 
 	info := BaseInfo{};
 	snippets, err := info.GetConf("snippets.yml");
 	if err != nil {
 		Warning.Println(err.Error())
-	}
-
-	for _, v := range snippets.Snippet {
-		peppers = append(peppers, pepper{Name: v.Name, Content: v.Content, Comment: v.Comment })
+	} else {
+		for _, v := range snippets.Snippet {
+			peppers = append(peppers, pepper{Name: v.Name, Content: v.Content, Comment: v.Comment })
+		}
 	}
 
 	templates := &promptui.SelectTemplates{
