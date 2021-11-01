@@ -7,6 +7,7 @@ import (
 	"log"
 	"regexp"
 	"strings"
+	 "os/exec"
 
 	"github.com/manifoldco/promptui"
 )
@@ -15,9 +16,7 @@ type pepper struct {
 	Name     string
 	Content  string
 	Comment  string
-	HeatUnit int
-	Peppers  int
-	CmdType  int
+	CmdType  string
 }
 
 var (
@@ -59,7 +58,7 @@ func main() {
 		Inactive: "  {{ .Content | blue }} ({{ .Name | blue }})",
 		Selected: " {{ .Content | red | cyan }}",
 		Details: `
---------- Pepper ----------
+--------- Detail ----------
 {{ "Name:" | faint }}	{{ .Name }}
 {{ "Content:" | faint }}	{{ .Content }}
 {{ "Comment:" | faint }}	{{ .Comment }}`,
@@ -67,11 +66,10 @@ func main() {
 
 	searcher := func(input string, index int) bool {
 		pepper := peppers[index]
-		name := strings.ToLower(pepper.Name)
+		ctx := strings.ToLower(pepper.Content)
 		input = strings.Replace(strings.ToLower(input), " ", ".*", -1)
 
-		match, _ := regexp.MatchString(input, name)  
-		//Warning.Println("searcher: ", input, index)
+		match, _ := regexp.MatchString(input, ctx)  
 		return match
 	}
 
@@ -86,11 +84,16 @@ func main() {
 	i, _, err := prompt.Run()
 
 	if err != nil {
-		fmt.Printf("Prompt failed %v\n", err)
+		fmt.Printf("Prompt failed %v, %d\n", err, i)
 		return
 	}
 
-	// Warning.Printf("You choose number %d: %v\n", i+1, peppers[i])
-
-	fmt.Println(peppers[i].Content)
+	command := fmt.Sprintf("echo '%s' | vipe ", peppers[i].Content)
+	cmd := exec.Command("/bin/bash", "-c", command)
+	output, err := cmd.Output()
+	if err != nil {
+		Warning.Printf("Cmd error choose number %d: %v\n", i+1, peppers[i])
+		return
+	}
+	fmt.Printf("%s", output)
 }
